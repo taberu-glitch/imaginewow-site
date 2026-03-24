@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Works — ImagineWow Animation</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --blue:#1A35E0;
+  --white:#ffffff;
+  --black:#0a0a0a;
+  --gray:#888;
+  --border:rgba(26,53,224,0.12);
+  --en:'Times New Roman','Times',serif;
+  --ja:'Noto Serif JP','Yu Mincho','游明朝',serif;
+}
+
+html{scroll-behavior:smooth;}
+body{background:var(--white);color:var(--blue);font-family:var(--ja);overflow-x:hidden;cursor:none;}
+
+/* カーソル */
+.cur{position:fixed;width:8px;height:8px;background:var(--blue);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .1s;}
+.cur-ring{position:fixed;width:40px;height:40px;border:1px solid rgba(26,53,224,.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .2s,height .2s,opacity .2s;}
+
+/* ローダー */
+#loader{position:fixed;inset:0;background:var(--blue);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ld-word{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,5vw,56px);letter-spacing:.1em;color:var(--white);margin-bottom:40px;}
+.ld-bar{width:200px;height:1px;background:rgba(255,255,255,.15);}
+.ld-fill{height:100%;background:var(--white);width:0%;}
+.ld-num{font-family:var(--en);font-size:11px;letter-spacing:.25em;color:rgba(255,255,255,.4);margin-top:12px;}
+
+/* ナビ */
+#nav{
+  position:fixed;top:0;left:0;right:0;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 48px;z-index:500;
+  border-bottom:none;
+  background:var(--blue);
+  backdrop-filter:blur(12px);
+}
+.nav-back{
+  font-family:var(--en);font-size:12px;letter-spacing:.25em;text-transform:uppercase;
+  color:rgba(255,255,255,.65);text-decoration:none;cursor:none;
+  display:flex;align-items:center;gap:10px;transition:color .2s;
+}
+.nav-back:hover{color:var(--white);}
+.nav-back::before{content:'←';font-size:16px;}
+.nav-brand{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.08em;color:var(--white);}
+.nav-num{font-family:var(--en);font-size:11px;letter-spacing:.2em;color:rgba(255,255,255,.5);}
+
+/* メインレイアウト */
+main{padding-top:64px;}
+
+/* 作品ヘッダー */
+.work-header{
+  padding:80px 48px 60px;
+  border-bottom:none;
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:end;
+  gap:40px;
+}
+.work-meta{display:flex;flex-direction:column;gap:16px;}
+.work-cat{
+  font-family:var(--en);font-size:10px;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--blue);display:flex;align-items:center;gap:12px;
+}
+.work-cat::before{content:'';width:24px;height:1px;background:var(--blue);}
+.work-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(48px,8vw,112px);
+  line-height:.88;letter-spacing:.02em;color:var(--blue);
+}
+.work-title-ja{
+  font-family:var(--ja);font-size:clamp(16px,2vw,24px);
+  font-weight:700;color:var(--gray);
+  margin-top:12px;letter-spacing:.08em;
+}
+.work-info{display:flex;flex-direction:column;align-items:flex-end;gap:12px;}
+.work-info-item{text-align:right;}
+.work-info-label{font-family:var(--en);font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3);}
+.work-info-val{font-family:var(--ja);font-size:13px;font-weight:700;color:var(--blue);letter-spacing:.05em;margin-top:4px;}
+
+/* 画像ギャラリー */
+.gallery{padding:0;}
+
+/* メイン画像（フルスクリーン） */
+.gallery-main{
+  position:relative;width:100%;
+  background:#f0f0f0;
+  overflow:hidden;
+}
+.gallery-main img{
+  width:100%;height:100vh;
+  object-fit:cover;object-position:center;
+  display:block;
+  transition:transform .6s cubic-bezier(.4,0,.2,1);
+}
+.gallery-main:hover img{transform:scale(1.02);}
+
+/* 画像カウンター */
+.gallery-counter{
+  position:absolute;bottom:32px;left:48px;
+  font-family:var(--en);font-size:11px;letter-spacing:.25em;
+  color:rgba(0,0,0,.4);
+  display:flex;align-items:center;gap:16px;
+}
+.gallery-counter-cur{color:var(--black);font-size:18px;font-weight:700;}
+
+/* 矢印ナビ */
+.gallery-prev,.gallery-next{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:64px;height:64px;
+  background:rgba(255,255,255,.8);
+  border:1.5px solid var(--blue);
+  display:flex;align-items:center;justify-content:center;
+  cursor:none;transition:background .2s,border-color .2s;
+  backdrop-filter:blur(8px);
+}
+.gallery-prev{left:32px;}
+.gallery-next{right:32px;}
+.gallery-prev:hover,.gallery-next:hover{background:var(--blue);}
+.gallery-prev:hover svg,.gallery-next:hover svg{stroke:var(--white);}
+.gallery-prev svg,.gallery-next svg{width:20px;height:20px;stroke:var(--blue);fill:none;stroke-width:1.5;}
+
+/* サムネイルストリップ */
+.gallery-thumbs{
+  display:flex;gap:2px;padding:2px 0;
+  background:#e8ecff;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.gallery-thumbs::-webkit-scrollbar{display:none;}
+.gallery-thumb{
+  flex-shrink:0;width:160px;height:90px;
+  overflow:hidden;cursor:none;position:relative;
+  opacity:.4;transition:opacity .3s;
+}
+.gallery-thumb.active{opacity:1;}
+.gallery-thumb::after{
+  content:'';position:absolute;inset:0;
+  border-bottom:2px solid transparent;
+  transition:border-color .3s;
+}
+.gallery-thumb.active::after{border-color:var(--blue);}
+.gallery-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;}
+.gallery-thumb:hover{opacity:.8;}
+.gallery-thumb:hover img{transform:scale(1.05);}
+
+/* 作品説明 */
+.work-body{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:0;
+  border-top:1px solid var(--border);
+}
+.work-desc{
+  padding:80px 48px 80px;
+  border-right:1px solid var(--border);
+}
+.work-desc-label{
+  font-family:var(--en);font-size:10px;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:32px;display:flex;align-items:center;gap:12px;
+}
+.work-desc-label::before{content:'';width:24px;height:1px;background:var(--blue);}
+.work-desc-text{
+  font-family:var(--ja);font-size:15px;font-weight:400;
+  line-height:2.4;color:#444;letter-spacing:.06em;
+}
+.work-specs{padding:80px 48px 80px;}
+.work-spec-row{
+  padding:20px 0;border-bottom:1px solid var(--border);
+  display:grid;grid-template-columns:140px 1fr;gap:16px;
+}
+.work-spec-row:first-child{border-top:1px solid var(--border);}
+.work-spec-key{font-family:var(--en);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3);}
+.work-spec-val{font-family:var(--ja);font-size:14px;font-weight:700;color:var(--blue);letter-spacing:.04em;}
+
+/* 次の実績へ */
+.work-next{
+  display:block;border-top:2px solid var(--blue);
+  padding:0;text-decoration:none;cursor:none;
+  position:relative;overflow:hidden;
+  background:var(--white);transition:background .3s;
+}
+.work-next:hover{background:var(--bluelight);}
+.work-next-inner{
+  display:grid;grid-template-columns:1fr 480px;
+  min-height:280px;
+}
+.work-next-content{
+  padding:64px 48px;
+  display:flex;flex-direction:column;justify-content:center;gap:20px;
+  position:relative;z-index:1;
+}
+.work-next-label{
+  font-family:var(--en);font-size:10px;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--gray);display:flex;align-items:center;gap:12px;
+}
+.work-next-label::after{
+  content:'';flex:1;height:1px;background:var(--border);
+}
+.work-next-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(40px,6vw,80px);letter-spacing:.02em;
+  color:var(--blue);line-height:.9;
+  transition:letter-spacing .3s,color .3s;
+}
+.work-next:hover .work-next-title{letter-spacing:.06em;color:var(--blue2);}
+.work-next-sub{font-family:var(--ja);font-size:13px;color:var(--gray);letter-spacing:.06em;}
+.work-next-arrow{
+  font-family:var(--en);font-size:13px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--blue);display:flex;align-items:center;gap:12px;
+  margin-top:8px;
+}
+.work-next-arrow::after{
+  content:'→';font-size:20px;
+  transition:transform .3s;
+}
+.work-next:hover .work-next-arrow::after{transform:translateX(8px);}
+.work-next-img{
+  overflow:hidden;position:relative;
+}
+.work-next-img img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  filter:brightness(.5);
+  transition:filter .4s,transform .4s;
+}
+.work-next:hover .work-next-img img{filter:brightness(.7);transform:scale(1.04);}
+
+/* フッター */
+footer{
+  padding:40px 48px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--white);
+}
+.footer-brand{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:.1em;color:var(--gray);}
+.footer-copy{font-family:var(--en);font-size:10px;letter-spacing:.2em;color:var(--gray);}
+
+/* レスポンシブ */
+@media(max-width:768px){
+  #nav{padding:0 20px;}
+  .work-header{grid-template-columns:1fr;padding:60px 20px 40px;}
+  .work-info{align-items:flex-start;}
+  .gallery-prev,.gallery-next{width:44px;height:44px;}
+  .gallery-counter{left:20px;}
+  .gallery-thumb{width:100px;height:56px;}
+  .work-body{grid-template-columns:1fr;}
+  .work-desc{padding:60px 20px;border-right:none;border-bottom:none;}
+  .work-specs{padding:60px 20px;}
+  .work-next-inner{grid-template-columns:1fr;}
+  .work-next-img{height:200px;}
+  .work-next-content{padding:40px 20px;}
+  footer{padding:32px 20px;flex-direction:column;gap:12px;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<div class="cur" id="cur"></div>
+<div class="cur-ring" id="curRing"></div>
+
+<!-- ローダー -->
+<div id="loader">
+  <div class="ld-word">ImagineWow</div>
+  <div class="ld-bar"><div class="ld-fill" id="ldFill"></div></div>
+  <div class="ld-num" id="ldNum">000%</div>
+</div>
+
+<!-- ナビ -->
+<nav id="nav">
+  <a class="nav-back" href="imaginewow.html" onclick="sessionStorage.setItem('goWorks','1')">WORKS</a>
+  <span class="nav-brand">ImagineWow Animation</span>
+  <span class="nav-num" id="navNum">001 / 006</span>
+</nav>
+
+<main id="main" style="display:none;">
+
+  <!-- 作品ヘッダー -->
+  <div class="work-header">
+    <div class="work-meta">
+      <div class="work-cat" id="wCat">BG / AniScape</div>
+      <h1 class="work-title" id="wTitle">ANISCAPE</h1>
+      <div class="work-title-ja" id="wTitleJa">背景生成システム v1.0</div>
+    </div>
+    <div class="work-info">
+      <div class="work-info-item">
+        <div class="work-info-label">Year</div>
+        <div class="work-info-val" id="wYear">2024</div>
+      </div>
+      <div class="work-info-item">
+        <div class="work-info-label">Role</div>
+        <div class="work-info-val" id="wRole">Background Generation</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ギャラリー -->
+  <div class="gallery">
+    <div class="gallery-main">
+      <img id="mainImg" src="" alt="">
+      <div class="gallery-counter">
+        <span class="gallery-counter-cur" id="imgCur">1</span>
+        <span>/</span>
+        <span id="imgTotal">4</span>
+      </div>
+      <div class="gallery-prev" onclick="prevImg()">
+        <svg viewBox="0 0 24 24"><polyline points="15,18 9,12 15,6"/></svg>
+      </div>
+      <div class="gallery-next" onclick="nextImg()">
+        <svg viewBox="0 0 24 24"><polyline points="9,6 15,12 9,18"/></svg>
+      </div>
+    </div>
+    <div class="gallery-thumbs" id="thumbs"></div>
+  </div>
+
+  <!-- 作品説明 -->
+  <div class="work-body">
+    <div class="work-desc">
+      <div class="work-desc-label">About this work</div>
+      <p class="work-desc-text" id="wDesc">
+        AniScapeは、AIと人の手が交差するアニメ背景生成プラットフォームです。
+        設定資料から自動でシーン指示を生成し、ControlNet技術でLINE素材の構図を物理的に拘束。
+        アングルが変わる問題を根本から解決しながら、近景・中景・遠景の自動レイヤー分割に対応しています。
+      </p>
+    </div>
+    <div class="work-specs">
+      <div class="work-spec-row">
+        <span class="work-spec-key">Client</span>
+        <span class="work-spec-val" id="wClient">ImagineWow / AniScape</span>
+      </div>
+      <div class="work-spec-row">
+        <span class="work-spec-key">Category</span>
+        <span class="work-spec-val" id="wSpecCat">BG Generation</span>
+      </div>
+      <div class="work-spec-row">
+        <span class="work-spec-key">Year</span>
+        <span class="work-spec-val" id="wSpecYear">2024</span>
+      </div>
+      <div class="work-spec-row">
+        <span class="work-spec-key">Technology</span>
+        <span class="work-spec-val" id="wTech">ComfyUI / ControlNet / GPT-4o</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 次の実績 -->
+  <a class="work-next" id="nextWork" href="#" onclick="loadWork(nextIdx);return false;">
+    <div class="work-next-inner">
+      <div class="work-next-content">
+        <div class="work-next-label">Next Work</div>
+        <div class="work-next-title" id="nextTitle">PROJECT HANA</div>
+        <div class="work-next-sub" id="nextSub">ジャパニメーション制作協力</div>
+        <div class="work-next-arrow">VIEW WORK</div>
+      </div>
+      <div class="work-next-img">
+        <img id="nextImg" src="" alt="">
+      </div>
+    </div>
+  </a>
+
+</main>
+
+<footer>
+  <span class="footer-brand">ImagineWow Animation</span>
+  <span class="footer-copy">© 2024 ImagineWow. All rights reserved.</span>
+</footer>
+
+<script>
+// ===== 実績データ =====
+// ※ 実際の画像はここにURLまたはbase64を入れてください
+// プレースホルダーとして色付きのSVGを使用
+function placeholder(color, label) {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720">'
+    + '<rect width="1280" height="720" fill="' + color + '"/>'
+    + '<text x="640" y="360" text-anchor="middle" dominant-baseline="middle" '
+    + 'font-family="serif" font-size="48" fill="rgba(255,255,255,0.3)">' + label + '</text>'
+    + '</svg>';
+  return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+}
+
+var WORKS = [
+  {
+    id: 0,
+    cat: 'BG / AniScape',
+    title: 'ANISCAPE',
+    titleJa: '背景生成システム v1.0',
+    year: '2024',
+    role: 'Background Generation',
+    client: 'ImagineWow / AniScape',
+    specCat: 'BG Generation',
+    tech: 'ComfyUI / ControlNet / GPT-4o',
+    desc: 'AniScapeは、AIと人の手が交差するアニメ背景生成プラットフォームです。設定資料から自動でシーン指示を生成し、ControlNet技術でLINE素材の構図を物理的に拘束。アングルが変わる問題を根本から解決しながら、近景・中景・遠景の自動レイヤー分割に対応しています。',
+    images: [
+      placeholder('#1A35E0', 'AniScape — BG System v1.0 / Image 01'),
+      placeholder('#0f22b0', 'AniScape — BG System v1.0 / Image 02'),
+      placeholder('#1a1a4e', 'AniScape — BG System v1.0 / Image 03'),
+      placeholder('#0d0d3d', 'AniScape — BG System v1.0 / Image 04'),
+    ]
+  },
+  {
+    id: 1,
+    cat: 'PRODUCTION',
+    title: 'PROJECT HANA',
+    titleJa: 'ジャパニメーション制作協力',
+    year: '2024',
+    role: 'Background Art Production',
+    client: '株式会社ケイブスタジオ',
+    specCat: 'Production',
+    tech: 'Photoshop / Clip Studio',
+    desc: 'ジャパニメーション制作協力プロジェクト「HANA」。ベトナムのホーチミンスタジオから日本のアニメ制作会社へ、背景美術の制作支援を行いました。伝統的な日本のアニメ美術の手法を踏まえながら、効率的な制作フローを構築しています。',
+    images: [
+      placeholder('#8B4513', 'Project HANA / Image 01'),
+      placeholder('#A0522D', 'Project HANA / Image 02'),
+      placeholder('#6B3410', 'Project HANA / Image 03'),
+    ]
+  },
+  {
+    id: 2,
+    cat: 'BG / AniScape',
+    title: 'LANDSCAPE',
+    titleJa: '風景背景 自動生成実験',
+    year: '2023',
+    role: 'Research & Development',
+    client: 'ImagineWow',
+    specCat: 'R&D / BG Generation',
+    tech: 'Stable Diffusion / ControlNet',
+    desc: '自然景観・風景背景の自動生成に特化した実験プロジェクト。山岳・森林・海岸など多様な環境背景を、アニメ特有のタッチで生成するためのパイプラインを研究開発しました。',
+    images: [
+      placeholder('#1e5c2e', 'Landscape / Image 01'),
+      placeholder('#2e8b57', 'Landscape / Image 02'),
+      placeholder('#145c30', 'Landscape / Image 03'),
+      placeholder('#0d3d1e', 'Landscape / Image 04'),
+    ]
+  },
+  {
+    id: 3,
+    cat: 'COLLAB',
+    title: 'CAVE STUDIO',
+    titleJa: '株式会社ケイブスタジオ コラボ',
+    year: '2023',
+    role: 'Collaboration / BG Art',
+    client: '株式会社ケイブスタジオ',
+    specCat: 'Collaboration',
+    tech: 'Photoshop / AE',
+    desc: '株式会社ケイブスタジオとのコラボレーションプロジェクト。両社の強みを活かし、AIを活用した背景美術の新しい制作ワークフローを共同開発。日本のアニメ制作現場のニーズに応える制作体制を構築しました。',
+    images: [
+      placeholder('#4a0080', 'Cave Studio / Image 01'),
+      placeholder('#6a00b0', 'Cave Studio / Image 02'),
+      placeholder('#350060', 'Cave Studio / Image 03'),
+    ]
+  },
+  {
+    id: 4,
+    cat: 'PRODUCTION',
+    title: 'INVISIBLE LINE',
+    titleJa: 'アニメ制作支援 — インビジブル・ライン',
+    year: '2023',
+    role: 'BG Art Support',
+    client: 'アニメ制作会社',
+    specCat: 'Production Support',
+    tech: 'Photoshop / Clip Studio',
+    desc: 'アニメ「インビジブル・ライン」の背景美術制作支援。スタジオの設定資料をもとに、ベトナムチームが一貫した美術スタイルを維持しながら、高品質な背景美術を制作。スケジュール管理から品質チェックまで、制作全体をサポートしました。',
+    images: [
+      placeholder('#003333', 'Invisible Line / Image 01'),
+      placeholder('#005555', 'Invisible Line / Image 02'),
+      placeholder('#002222', 'Invisible Line / Image 03'),
+      placeholder('#004444', 'Invisible Line / Image 04'),
+    ]
+  },
+  {
+    id: 5,
+    cat: 'BG / AniScape',
+    title: 'CITYSCAPE',
+    titleJa: 'AniScape — 都市背景 プロトタイプ',
+    year: '2022',
+    role: 'Prototype Development',
+    client: 'ImagineWow',
+    specCat: 'R&D / Prototype',
+    tech: 'Stable Diffusion / Python',
+    desc: 'AniScapeの原型となった都市背景生成プロトタイプ。現代都市・未来都市・古都など多様な都市景観を生成するためのモデルと、アニメ特有の色彩・線画スタイルへの変換パイプラインを開発しました。',
+    images: [
+      placeholder('#1a1a1a', 'Cityscape / Image 01'),
+      placeholder('#2a2a2a', 'Cityscape / Image 02'),
+      placeholder('#111111', 'Cityscape / Image 03'),
+    ]
+  }
+];
+
+// ===== 状態管理 =====
+var currentWork = 0;
+var currentImg  = 0;
+var nextIdx     = 1;
+
+// URLパラメータから作品インデックスを取得
+function getWorkIdxFromURL() {
+  try {
+    var p = new URLSearchParams(window.location.search);
+    var id = parseInt(p.get('work') || '0');
+    return Math.max(0, Math.min(id, WORKS.length - 1));
+  } catch(e) { return 0; }
+}
+
+// 作品を読み込む
+function loadWork(idx) {
+  currentWork = idx;
+  currentImg  = 0;
+  nextIdx     = (idx + 1) % WORKS.length;
+
+  var w = WORKS[idx];
+  var nw = WORKS[nextIdx];
+
+  // ヘッダー
+  document.getElementById('wCat').textContent     = w.cat;
+  document.getElementById('wTitle').textContent   = w.title;
+  document.getElementById('wTitleJa').textContent = w.titleJa;
+  document.getElementById('wYear').textContent    = w.year;
+  document.getElementById('wRole').textContent    = w.role;
+  // ナビ番号
+  document.getElementById('navNum').textContent =
+    String(idx + 1).padStart(3,'0') + ' / ' + String(WORKS.length).padStart(3,'0');
+  // 説明
+  document.getElementById('wDesc').textContent    = w.desc;
+  document.getElementById('wClient').textContent  = w.client;
+  document.getElementById('wSpecCat').textContent = w.specCat;
+  document.getElementById('wSpecYear').textContent= w.year;
+  document.getElementById('wTech').textContent    = w.tech;
+  // メイン画像
+  document.getElementById('mainImg').src  = w.images[0];
+  document.getElementById('imgTotal').textContent = w.images.length;
+  document.getElementById('imgCur').textContent   = '1';
+  // サムネイル生成
+  var thumbs = document.getElementById('thumbs');
+  thumbs.innerHTML = '';
+  w.images.forEach(function(src, i) {
+    var d = document.createElement('div');
+    d.className = 'gallery-thumb' + (i === 0 ? ' active' : '');
+    d.innerHTML = '<img src="' + src + '" alt="">';
+    d.onclick = (function(ii){ return function(){ showImg(ii); }; })(i);
+    thumbs.appendChild(d);
+  });
+  // 次の実績
+  document.getElementById('nextTitle').textContent = nw.title;
+  document.getElementById('nextSub').textContent   = nw.titleJa;
+  document.getElementById('nextImg').src           = nw.images[0];
+
+  window.scrollTo(0,0);
+}
+
+// 画像切り替え
+function showImg(idx) {
+  var w = WORKS[currentWork];
+  currentImg = idx;
+  document.getElementById('mainImg').src = w.images[idx];
+  document.getElementById('imgCur').textContent = idx + 1;
+  document.querySelectorAll('.gallery-thumb').forEach(function(t, i) {
+    t.classList.toggle('active', i === idx);
+  });
+  // サムネイルをスクロール
+  var thumbs = document.getElementById('thumbs');
+  var thumb  = thumbs.children[idx];
+  if (thumb) thumb.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+}
+function prevImg() {
+  var n = (currentImg - 1 + WORKS[currentWork].images.length) % WORKS[currentWork].images.length;
+  showImg(n);
+}
+function nextImg() {
+  var n = (currentImg + 1) % WORKS[currentWork].images.length;
+  showImg(n);
+}
+
+// キーボード操作
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowLeft')  prevImg();
+  if (e.key === 'ArrowRight') nextImg();
+});
+
+// カーソル
+var cur = document.getElementById('cur');
+var ring = document.getElementById('curRing');
+var mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', function(e){ mx=e.clientX; my=e.clientY; });
+(function animCur(){
+  cur.style.left=mx+'px'; cur.style.top=my+'px';
+  rx+=(mx-rx)*.12; ry+=(my-ry)*.12;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(animCur);
+})();
+
+// ローダー
+(function(){
+  var fill  = document.getElementById('ldFill');
+  var numEl = document.getElementById('ldNum');
+  var loader= document.getElementById('loader');
+  var p=0;
+  var t=setInterval(function(){
+    p+=Math.floor(Math.random()*9)+4;
+    if(p>=100){
+      p=100; clearInterval(t);
+      fill.style.width='100%'; numEl.textContent='100%';
+      setTimeout(function(){
+        loader.style.transition='opacity 0.5s'; loader.style.opacity='0';
+        setTimeout(function(){
+          loader.style.display='none';
+          var idx = getWorkIdxFromURL();
+          loadWork(idx);
+          document.getElementById('main').style.display='block';
+        },520);
+      },300);
+      return;
+    }
+    fill.style.width=p+'%';
+    numEl.textContent=(p<10?'00':p<100?'0':'')+p+'%';
+  },50);
+})();
+</script>
+</body>
+</html>
