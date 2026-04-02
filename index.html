@@ -867,22 +867,24 @@ function goPage(id){PAGES.forEach(function(p){document.getElementById(p).style.d
 function filt(cat,btn){document.querySelectorAll('.fb').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');document.querySelectorAll('.w-row').forEach(function(r){r.style.display=(cat==='ALL'||r.getAttribute('data-c')===cat)?'grid':'none';});}
 function sendContact(e){e.preventDefault();var name=document.getElementById('f-name').value,email=document.getElementById('f-email').value,type=document.getElementById('f-type').value,msg=document.getElementById('f-msg').value;var sub=encodeURIComponent('[ImagineWow] '+(type||'お問い合わせ'));var bd=encodeURIComponent('お名前: '+name+'\nメール: '+email+'\n種別: '+type+'\n\n'+msg);window.location.href='mailto:info@imaginewow.jp?subject='+sub+'&body='+bd;document.getElementById('f-result').textContent='✓ メーラーが開きます。そのまま送信してください。';}
 (function init(){
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',function(){
-      PAGES.forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
-      var home=document.getElementById('home');if(home)home.style.display='block';
+  function run(){
+    PAGES.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.style.display='none';
     });
-  } else {
-    PAGES.forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
-    var home=document.getElementById('home');if(home)home.style.display='block';
+    // work-detailから戻ったときWORKSを表示、それ以外はhomeを表示
+    if(sessionStorage.getItem('goWorks')==='1'){
+      sessionStorage.removeItem('goWorks');
+      goPage('works');
+    } else {
+      var home=document.getElementById('home');
+      if(home) home.style.display='block';
+    }
   }
-})();
-
-// work-detailから戻ったときWORKSページを表示
-(function(){
-  if (sessionStorage.getItem('goWorks') === '1') {
-    sessionStorage.removeItem('goWorks');
-    goPage('works');
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
   }
 })();
 </script>
