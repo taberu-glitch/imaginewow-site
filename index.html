@@ -877,6 +877,14 @@ function sendContact(e){e.preventDefault();var name=document.getElementById('f-n
     var home=document.getElementById('home');if(home)home.style.display='block';
   }
 })();
+
+// work-detailから戻ったときWORKSページを表示
+(function(){
+  if (sessionStorage.getItem('goWorks') === '1') {
+    sessionStorage.removeItem('goWorks');
+    goPage('works');
+  }
+})();
 </script>
 </body>
 </html>
