@@ -864,7 +864,49 @@ footer{
 var PAGES=['home','works','about','aniscape','contact'];
 function goPage(id){PAGES.forEach(function(p){document.getElementById(p).style.display='none';});document.querySelectorAll('#nav ul a').forEach(function(a){a.classList.remove('on');});document.getElementById(id).style.display='block';var l=document.getElementById('nl-'+id);if(l)l.classList.add('on');window.scrollTo(0,0);}
 function filt(cat,btn){document.querySelectorAll('.fb').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');document.querySelectorAll('.w-row').forEach(function(r){r.style.display=(cat==='ALL'||r.getAttribute('data-c')===cat)?'grid':'none';});}
-function sendContact(e){e.preventDefault();var name=document.getElementById('f-name').value,email=document.getElementById('f-email').value,type=document.getElementById('f-type').value,msg=document.getElementById('f-msg').value;var sub=encodeURIComponent('[ImagineWow] '+(type||'お問い合わせ'));var bd=encodeURIComponent('お名前: '+name+'\nメール: '+email+'\n種別: '+type+'\n\n'+msg);window.location.href='mailto:info@imaginewow.jp?subject='+sub+'&body='+bd;document.getElementById('f-result').textContent='✓ メーラーが開きます。そのまま送信してください。';}
+function sendContact(e){
+  e.preventDefault();
+  var name   = document.getElementById('f-name').value;
+  var email  = document.getElementById('f-email').value;
+  var type   = document.getElementById('f-type').value;
+  var msg    = document.getElementById('f-msg').value;
+  var result = document.getElementById('f-result');
+  var btn    = e.target.querySelector('button[type="submit"]');
+
+  if (!name || !email || !msg) {
+    result.textContent = '\u26a0\ufe0f \u304a\u540d\u524d\u30fb\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9\u30fb\u304a\u554f\u3044\u5408\u308f\u305b\u5185\u5bb9\u306f\u5fc5\u9808\u3067\u3059\u3002';
+    result.style.color = '#e53e3e';
+    return;
+  }
+
+  result.textContent = '\u9001\u4fe1\u4e2d...';
+  result.style.color = '#555';
+  if (btn) btn.disabled = true;
+
+  fetch('https://formspree.io/f/mqewpoyb', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      _subject: '[ImagineWow \u304a\u554f\u3044\u5408\u308f\u305b] ' + (type || '\u304a\u554f\u3044\u5408\u308f\u305b'),
+      name: name, email: email, type: type, message: msg
+    })
+  })
+  .then(function(res){
+    if (res.ok) {
+      result.textContent = '\u2713 \u304a\u554f\u3044\u5408\u308f\u305b\u3092\u9001\u4fe1\u3057\u307e\u3057\u305f\u3002\u5f8c\u307b\u3069\u3054\u9023\u7d61\u3044\u305f\u3057\u307e\u3059\u3002';
+      result.style.color = '#2563eb';
+      e.target.reset();
+    } else { throw new Error(); }
+  })
+  .catch(function(){
+    var sub = encodeURIComponent('[ImagineWow] ' + (type || '\u304a\u554f\u3044\u5408\u308f\u305b'));
+    var bd  = encodeURIComponent('\u304a\u540d\u524d: ' + name + '\n\u30e1\u30fc\u30eb: ' + email + '\n\u7a2e\u5225: ' + type + '\n\n' + msg);
+    window.location.href = 'mailto:tkinoshita@cavestudio.jp?subject=' + sub + '&body=' + bd;
+    result.textContent = '\u2713 \u30e1\u30fc\u30e9\u30fc\u304c\u958b\u304d\u307e\u3059\u3002\u305d\u306e\u307e\u307e\u9001\u4fe1\u3057\u3066\u304f\u3060\u3055\u3044\u3002';
+    result.style.color = '#2563eb';
+  })
+  .finally(function(){ if (btn) btn.disabled = false; });
+}
 (function init(){
   function run(){
     PAGES.forEach(function(id){
